@@ -7,4 +7,4 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
     MONGO_URI = os.getenv("MONGO_URI")
-    DB_NAME = os.getenv("USER_DB")
+    DB_NAME = os.getenv("TASKS_DB")
