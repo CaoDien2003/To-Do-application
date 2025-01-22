@@ -1,5 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from passlib.hash import pbkdf2_sha256 as sha256
 from src.auth.services import register_user, find_user_by_username
+
 # create Blueprint
 auth_bp = Blueprint("auth", __name__, template_folder="../templates")
 

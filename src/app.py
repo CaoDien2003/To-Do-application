@@ -1,9 +1,19 @@
 from flask import Flask
-from pymongo import MongoClient
+from flask_pymongo import PyMongo
+from src.auth.routes import auth_bp
 
 app = Flask(__name__)
+app.config.from_object("src.auth.config.Config")
 
-client = MongoClient('localhost', 27017)
+# MongoDB connection
+mongo = PyMongo(app, uri=app.config["MONGO_URI"])
+user_db = mongo.cx[app.config["USER_DB"]]  # Access the database by name
 
-db = client.flask_db
-todos = db.todos
+# Pass the database instance to Blueprints
+app.config["DB"] = user_db
+
+# Register Blueprints
+app.register_blueprint(auth_bp)
+
+if __name__ == "__main__":
+    app.run(debug=True)
