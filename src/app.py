@@ -1,19 +1,44 @@
-from flask import Flask
-from flask_pymongo import PyMongo
-from src.auth.routes import auth_bp
+from flask import Flask, request, jsonify
+import pymongo
+import certifi
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 
 app = Flask(__name__)
-app.config.from_object("src.auth.config.Config")
+app.config["JWT_SECRET_KEY"] = "key-secret"
+jwt = JWTManager(app)
 
-# MongoDB connection
-mongo = PyMongo(app, uri=app.config["MONGO_URI"])
-user_db = mongo.cx[app.config["USER_DB"]]  # Access the database by name
+MONGO_URI = 'mongodb://localhost:27017/'
+client = pymongo.MongoClient(
+    'mongodb://localhost:27017/',
+    tlsCAFile=certifi.where()
+)
 
-# Pass the database instance to Blueprints
-app.config["DB"] = user_db
+db = client["test"]
+collection = db["testing"]
 
-# Register Blueprints
-app.register_blueprint(auth_bp)
+@app.route("/test", methods = ["GET"])
+def index():
+    try:
+        data = request.get_json()
+        return jsonify(message="successfully created")
+    except:
+        print("Error")
+        return jsonify 
+@app.route("/login", methods=["POST"])
+def login():
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+    if username != "test" or password != "test":
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    access_token = create_access_token(identity=username)
+    return jsonify(access_token=access_token)
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
