@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 import pymongo
 import certifi
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
+from werkzeug.security import generate_password_hash,check_password_hash
+import traceback
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "key-secret"
@@ -23,7 +25,8 @@ def index():
         return jsonify(message="successfully created")
     except:
         print("Error")
-        return jsonify 
+        return jsonify
+
 @app.route("/login", methods=["POST"])
 def login():
     username = request.json.get("username", None)
@@ -33,6 +36,29 @@ def login():
 
     access_token = create_access_token(identity=username)
     return jsonify(access_token=access_token)
+
+@app.route("/register", methods=["POST"])
+def register():
+    try:
+        data= request.get_json()
+        email = data.get("email")
+        password = data.get("password")
+        name = data.get("name")
+
+        if not email or not password or not name:
+            return jsonify({"message":"Missing name, password or email"}), 400
+        if collection.find_one({"email": email}):
+            return jsonify({"message":"Email aleady exists"}), 400
+
+        hash_password = generate_password_hash(password)
+        collection.insert_one({"email":email,"password": hash_password, "name": name})
+
+        return jsonify({"message":"user register successfully"})
+
+    except Exception as e:
+        print(f"error{traceback.format_exc()}: {e}")
+        return jsonify(message=traceback.format_exc())
+
 @app.route("/protected", methods=["GET"])
 @jwt_required()
 def protected():
