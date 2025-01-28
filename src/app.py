@@ -25,17 +25,24 @@ def index():
         return jsonify(message="successfully created")
     except:
         print("Error")
-        return jsonify
+        return 
 
 @app.route("/login", methods=["POST"])
 def login():
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
-    if username != "test" or password != "test":
-        return jsonify({"msg": "Bad username or password"}), 401
+    try:
+        data = request.json.get
+        email = data.get("email")
+        password = data.get("password")
+        if not email or not password:
+            return jsonify({"message": "Missing email or password"}), 400
 
-    access_token = create_access_token(identity=username)
-    return jsonify(access_token=access_token)
+        user = collection.find_one({"email":email})
+        if user and check_password_hash(user["password"],password)
+            access_token = create_access_token(identity={"email":email})
+            return jsonify(token=access_token, name=user["name"], email=email), 200
+    except Exception as e:
+        print(f"error is {e} and {traceback.format_exc()}")
+        return jsonify({"message":traceback.format_exc()})
 
 @app.route("/register", methods=["POST"])
 def register():
